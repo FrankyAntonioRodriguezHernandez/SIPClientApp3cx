@@ -6,37 +6,44 @@ using NAudio.Wave;
 
 class Program
 {
-    private static string SIP_SERVER = "smabit.3cx.it";
-    private static string SIP_USERNAME = "32";
-    private static string SIP_PASSWORD = "Franky2025";
+    private const string SIP_DOMAIN = "smabit.3cx.it";
+    private const int SIP_PORT = 5060;
+    private static string SIP_USERNAME = "29";
+    private static string SIP_PASSWORD = "WEvB2aRAp8"; 
     private static WaveInEvent? _waveIn;
     private static WaveOutEvent? _waveOut;
 
     static async Task Main(string[] args)
     {
         Console.WriteLine("Cliente SIP para 3CX - .NET 8");
-        Console.WriteLine($"Servidor: {SIP_SERVER}");
+        Console.WriteLine($"Servidor: {SIP_DOMAIN}");
         Console.WriteLine($"Usuario: {SIP_USERNAME}");
 
-        Console.Write("Ingrese el número a llamar (ej: 33): ");
-        string destinationNumber = Console.ReadLine();
+        Console.Write("Ingrese el número a llamar: ");
+        string? destinationNumber = Console.ReadLine();
+
+        if (string.IsNullOrEmpty(destinationNumber))
+        {
+            Console.WriteLine("Número inválido");
+            return;
+        }
 
         try
         {
-            // Configurar audio
+            // 1. Configurar audio
             SetupAudioDevices();
 
-            // Configurar el transporte SIP
+            // 2. Configurar transporte SIP
             var sipTransport = new SIPTransport();
             var userAgent = new SIPUserAgent(sipTransport, null);
 
-            // Registrar en el servidor 3CX con el constructor correcto (5 parámetros)
+            // 3. Registrar en 3CX con constructor correcto para v8.0.11
             var regUserAgent = new SIPRegistrationUserAgent(
                 sipTransport,
-                SIP_USERNAME,    // username
-                SIP_PASSWORD,    // password
-                SIP_SERVER,      // server
-                5060);           // port
+                SIP_USERNAME,
+                SIP_PASSWORD,
+                SIP_DOMAIN,
+                SIP_PORT);
 
             regUserAgent.RegistrationFailed += (uri, resp, err) => 
                 Console.WriteLine($"Error de registro: {err} (Código: {resp?.StatusCode})");
@@ -45,16 +52,15 @@ class Program
                 Console.WriteLine("Registro SIP exitoso!");
 
             regUserAgent.Start();
-
-            Console.WriteLine("Registrando en el servidor 3CX...");
+            Console.WriteLine("Registrando en 3CX...");
             await Task.Delay(3000);
 
-            // Configurar la llamada con URI correctamente formateado
+            // 4. Configurar llamada con URI correctamente formateado
             var callDescriptor = new SIPCallDescriptor(
                 SIP_USERNAME,
                 SIP_PASSWORD,
-                SIP_SERVER,
-                $"sip:{destinationNumber}@{SIP_SERVER}",
+                SIP_DOMAIN,
+                $"sip:{destinationNumber}@{SIP_DOMAIN}", // Formato corregido
                 null, null, null, null,
                 SIPCallDirection.Out,
                 "application/sdp",
@@ -69,18 +75,13 @@ class Program
             userAgent.OnCallHungup += (dialog) => 
                 Console.WriteLine("Llamada finalizada");
 
-            // Realizar la llamada
+            // 5. Realizar llamada
             bool callResult = await userAgent.Call(callDescriptor, null);
 
             if (callResult)
             {
                 Console.WriteLine("Llamada conectada. Presione 'h' para colgar...");
-                
-                while (Console.ReadKey(true).Key != ConsoleKey.H)
-                {
-                    // Mantener la llamada activa
-                }
-
+                while (Console.ReadKey(true).Key != ConsoleKey.H) { }
                 userAgent.Hangup();
             }
         }
@@ -91,10 +92,9 @@ class Program
         finally
         {
             CleanupAudio();
+            Console.WriteLine("Presione cualquier tecla para salir...");
+            Console.ReadKey();
         }
-
-        Console.WriteLine("Presione cualquier tecla para salir...");
-        Console.ReadKey();
     }
 
     private static void SetupAudioDevices()
@@ -112,8 +112,8 @@ class Program
             _waveOut.Init(waveProvider);
             _waveOut.Play();
 
-            Console.WriteLine("Audio configurado para VoIP:");
-            Console.WriteLine($"- Formato: 8000Hz, 16 bits, mono");
+            Console.WriteLine("Audio configurado para 3CX:");
+            Console.WriteLine("- Formato: PCM 8000Hz, 16 bits, mono");
         }
         catch (Exception ex)
         {

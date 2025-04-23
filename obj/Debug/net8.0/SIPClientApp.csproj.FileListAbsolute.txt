@@ -23,6 +23,7 @@ C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClientApp.GeneratedMSBu
 C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClientApp.AssemblyInfoInputs.cache
 C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClientApp.AssemblyInfo.cs
 C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClientApp.csproj.CoreCompileInputs.cache
+C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClientApp.sourcelink.json
 C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClien.62FACDFE.Up2Date
 C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\SIPClientApp.dll
 C:\Franky_Zone\Projects\SIPClientApp\obj\Debug\net8.0\refint\SIPClientApp.dll
