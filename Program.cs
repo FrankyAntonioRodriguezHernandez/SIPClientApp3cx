@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using SIPSorcery.SIP;
 using SIPSorcery.SIP.App;
@@ -6,20 +7,20 @@ using NAudio.Wave;
 
 class Program
 {
-    private const string SIP_DOMAIN = "smabit.3cx.it";
+    // Configuración para AntiSIP
+    private const string SIP_DOMAIN = "sip.antisip.com";
     private const int SIP_PORT = 5060;
-    private static string SIP_USERNAME = "29";
-    private static string SIP_PASSWORD = "WEvB2aRAp8"; 
+    private static string SIP_USERNAME = "frankyan";
+    private static string SIP_PASSWORD = "hb8zRUcD8CTGS6x";
     private static WaveInEvent? _waveIn;
     private static WaveOutEvent? _waveOut;
 
     static async Task Main(string[] args)
     {
-        Console.WriteLine("Cliente SIP para 3CX - .NET 8");
-        Console.WriteLine($"Servidor: {SIP_DOMAIN}");
-        Console.WriteLine($"Usuario: {SIP_USERNAME}");
+        Console.WriteLine("Cliente SIP para AntiSIP - .NET 8");
+        Console.WriteLine($"Usuario: {SIP_USERNAME}@{SIP_DOMAIN}");
 
-        Console.Write("Ingrese el número a llamar: ");
+        Console.Write("Ingrese el número a llamar (prueba con 100 para eco): ");
         string? destinationNumber = Console.ReadLine();
 
         if (string.IsNullOrEmpty(destinationNumber))
@@ -35,32 +36,44 @@ class Program
 
             // 2. Configurar transporte SIP
             var sipTransport = new SIPTransport();
+            var udpChannel = new SIPUDPChannel(new IPEndPoint(IPAddress.Any, 0));
+            sipTransport.AddSIPChannel(udpChannel);
+            
+            // Añade esto después de crear el SIPTransport
+            sipTransport.EnableTraceLogs();
+
             var userAgent = new SIPUserAgent(sipTransport, null);
 
-            // 3. Registrar en 3CX con constructor correcto para v8.0.11
+            // 3. Registrar en AntiSIP
+            var registrarUri = SIPURI.ParseSIPURI($"sip:{SIP_DOMAIN}:{SIP_PORT}");
+            
             var regUserAgent = new SIPRegistrationUserAgent(
                 sipTransport,
                 SIP_USERNAME,
                 SIP_PASSWORD,
-                SIP_DOMAIN,
-                SIP_PORT);
+                registrarUri.ToString(),
+                SIP_REGISTRATION_DEFAULT_EXPIRY);
 
             regUserAgent.RegistrationFailed += (uri, resp, err) => 
                 Console.WriteLine($"Error de registro: {err} (Código: {resp?.StatusCode})");
             
             regUserAgent.RegistrationSuccessful += (uri, resp) => 
-                Console.WriteLine("Registro SIP exitoso!");
+                Console.WriteLine("Registro SIP exitoso en AntiSIP!");
 
+            Console.WriteLine("Registrando en AntiSIP...");
             regUserAgent.Start();
-            Console.WriteLine("Registrando en 3CX...");
+
+            // Esperar 3 segundos para que el registro se complete
             await Task.Delay(3000);
 
-            // 4. Configurar llamada con URI correctamente formateado
+            // 4. Configurar llamada (URI corregido)
+            var destinationUri = SIPURI.ParseSIPURI($"sip:{destinationNumber}@{SIP_DOMAIN}:{SIP_PORT}");
+            
             var callDescriptor = new SIPCallDescriptor(
                 SIP_USERNAME,
                 SIP_PASSWORD,
                 SIP_DOMAIN,
-                $"sip:{destinationNumber}@{SIP_DOMAIN}", // Formato corregido
+                destinationUri.ToString(), // Asegurar que el URI tenga el formato correcto
                 null, null, null, null,
                 SIPCallDirection.Out,
                 "application/sdp",
@@ -84,6 +97,10 @@ class Program
                 while (Console.ReadKey(true).Key != ConsoleKey.H) { }
                 userAgent.Hangup();
             }
+            else
+            {
+                Console.WriteLine("No se pudo conectar la llamada");
+            }
         }
         catch (Exception ex)
         {
@@ -97,13 +114,15 @@ class Program
         }
     }
 
+    private const int SIP_REGISTRATION_DEFAULT_EXPIRY = 120;
+
     private static void SetupAudioDevices()
     {
         try
         {
             _waveIn = new WaveInEvent
             {
-                WaveFormat = new WaveFormat(8000, 16, 1),
+                WaveFormat = new WaveFormat(8000, 16, 1), // G.711 compatible
                 BufferMilliseconds = 50
             };
             
@@ -112,8 +131,8 @@ class Program
             _waveOut.Init(waveProvider);
             _waveOut.Play();
 
-            Console.WriteLine("Audio configurado para 3CX:");
-            Console.WriteLine("- Formato: PCM 8000Hz, 16 bits, mono");
+            Console.WriteLine("Audio configurado para VoIP:");
+            Console.WriteLine("- Formato: PCM 8000Hz, 16 bits, mono (G.711)");
         }
         catch (Exception ex)
         {

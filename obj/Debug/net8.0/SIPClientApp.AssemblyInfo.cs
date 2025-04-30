@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SIPClientApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+558f1f832ee27d0d04a3e66d242b84e24f079a39")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b4ea09e5fe524213d9e63f8a0b340818a8936f4a")]
 [assembly: System.Reflection.AssemblyProductAttribute("SIPClientApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SIPClientApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
